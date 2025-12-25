@@ -21,7 +21,8 @@ export async function GET() {
     return NextResponse.json(normalized);
   } catch (error) {
     console.error('Error fetching sliders:', error);
-    return NextResponse.json({ error: 'Failed to fetch sliders' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to fetch sliders', details: message }, { status: 500 });
   }
 }
 
