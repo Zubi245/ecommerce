@@ -4,7 +4,9 @@ import Slider from '@/models/Slider';
 
 export async function GET() {
   try {
+    console.log("DB is connecting")
     await connectDB();
+    console.log("DB is connected")
     
     const sliders = await Slider.find().sort({ sortOrder: 1, createdAt: -1 });
     
@@ -18,10 +20,12 @@ export async function GET() {
       createdAt: s.createdAt.toISOString(),
     }));
     
+    console.log(normalized)
     return NextResponse.json(normalized);
   } catch (error) {
     console.error('Error fetching sliders:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error fetching sliders:', message);
     return NextResponse.json({ error: 'Failed to fetch sliders', details: message }, { status: 500 });
   }
 }
@@ -36,6 +40,7 @@ export async function POST(req: Request) {
     const slider = new Slider(body);
     await slider.save();
     
+    console.log(slider)
     return NextResponse.json({
       id: slider._id.toString(),
       title: slider.title,
