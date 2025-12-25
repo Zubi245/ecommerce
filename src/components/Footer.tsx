@@ -34,7 +34,7 @@ export const Footer = () => {
               <ul className="space-y-4 text-sm text-gray-400">
                 <li className="flex items-center space-x-3">
                   <Phone size={16} />
-                  <span>+92 300 1234567</span>
+                  <span>+92 371 0483155</span>
                 </li>
                 <li className="flex items-center space-x-3">
                   <Mail size={16} />
@@ -55,7 +55,7 @@ export const Footer = () => {
 
       {/* WhatsApp Floating Button */}
       <a 
-        href="https://wa.me/923001234567" 
+        href="https://wa.me/923710483155" 
         target="_blank" 
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 bg-[#25D366] text-white p-3 md:p-4 rounded-full shadow-lg hover:scale-110 transition-transform duration-300"
