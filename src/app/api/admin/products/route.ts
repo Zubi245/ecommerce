@@ -37,7 +37,8 @@ export async function POST(req: Request) {
     await connectDB();
     
     const body = await req.json();
-    const product = await Product.create(body);
+    const product = new Product(body);
+    await product.save();
     
     return NextResponse.json({
       id: product._id.toString(),

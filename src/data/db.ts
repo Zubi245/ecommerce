@@ -1,4 +1,4 @@
-import { Product, Order, HeroSlide } from '../../types';
+import { Product, Order, HeroSlide } from '@/types';
 
 const PRODUCTS_KEY = 'sam_fabrics_products';
 const PRODUCTS_VERSION_KEY = 'sam_fabrics_products_version';
