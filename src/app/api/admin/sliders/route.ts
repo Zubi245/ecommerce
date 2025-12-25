@@ -28,7 +28,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    console.log("DB is Connecting")
     await connectDB();
+    console.log("DB Connected")
     
     const body = await req.json();
     const slider = new Slider(body);
