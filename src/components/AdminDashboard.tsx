@@ -70,8 +70,11 @@ const ProductForm: React.FC<{
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   isEditing: boolean;
-}> = ({ product, onChange, onSubmit, onCancel, isEditing }) => {
+  uploadedFileIds: string[];
+  setUploadedFileIds: React.Dispatch<React.SetStateAction<string[]>>;
+}> = ({ product, onChange, onSubmit, onCancel, isEditing, uploadedFileIds, setUploadedFileIds }) => {
   const [uploading, setUploading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -82,6 +85,7 @@ const ProductForm: React.FC<{
 
     setUploading(true);
     const uploadedUrls: string[] = [];
+    const newFileIds: string[] = [];
 
     for (const file of validFiles) {
       try {
@@ -96,7 +100,12 @@ const ProductForm: React.FC<{
 
         if (res.ok) {
           const data = await res.json();
-          uploadedUrls.push(data.url);
+          if (data.url && data.fileId) {
+            uploadedUrls.push(data.url);
+            newFileIds.push(data.fileId);
+          }
+        } else {
+          console.error('Upload failed:', await res.text());
         }
       } catch (error) {
         console.error('Error uploading image:', error);
@@ -104,16 +113,56 @@ const ProductForm: React.FC<{
     }
 
     if (uploadedUrls.length > 0) {
-      const updatedProduct = { ...product, images: [...(product.images || []), ...uploadedUrls] };
+      const updatedProduct = {
+        ...product,
+        images: [...(product.images || []), ...uploadedUrls],
+        imgIds: [...(product.imgIds || []), ...newFileIds],
+      };
       onChange(updatedProduct);
+      // Track newly uploaded fileIds for cancel handling
+      setUploadedFileIds(prev => [...prev, ...newFileIds]);
     }
     setUploading(false);
   };
 
-  const removeImage = (index: number) => {
-    const newImages = (product.images || []).filter((_, i) => i !== index);
-    const updatedProduct = { ...product, images: newImages };
-    onChange(updatedProduct);
+  const removeImage = async (index: number) => {
+    const imgId = product.imgIds?.[index];
+    
+    // Don't allow removal while another delete is in progress
+    if (deleteLoading !== null) return;
+    
+    setDeleteLoading(index);
+    
+    try {
+      // Delete from ImageKit if we have a fileId
+      if (imgId) {
+        const res = await fetch(`/api/upload?fileId=${imgId}`, { method: 'DELETE' });
+        if (!res.ok) {
+          console.error('Failed to delete from ImageKit');
+        }
+        // Remove from newly uploaded tracking if present
+        setUploadedFileIds(prev => prev.filter(id => id !== imgId));
+      }
+      
+      // Update product state - remove from both arrays
+      const newImages = (product.images || []).filter((_, i) => i !== index);
+      const newImgIds = (product.imgIds || []).filter((_, i) => i !== index);
+      
+      onChange({
+        ...product,
+        images: newImages,
+        imgIds: newImgIds,
+      });
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  const handleCancel = () => {
+    // Parent handles image deletion via onCancel
+    onCancel();
   };
 
   return (
@@ -271,18 +320,24 @@ const ProductForm: React.FC<{
                   <img
                     src={getSafeImage(img)}
                     alt={`Product ${index + 1}`}
-                    className="w-full h-24 object-cover rounded border"
+                    className={`w-full h-24 object-cover rounded border ${deleteLoading === index ? 'opacity-50' : ''}`}
                     onError={(e) => {
                       e.currentTarget.src = FALLBACK_IMAGE;
                     }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={12} />
-                  </button>
+                  {deleteLoading === index ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -293,7 +348,7 @@ const ProductForm: React.FC<{
       <div className="flex justify-end space-x-3 pt-4 border-t">
         <button
           type="button"
-          onClick={onCancel}
+          onClick={handleCancel}
           className="px-6 py-3 text-gray-600 hover:bg-gray-100 font-medium rounded"
         >
           Cancel
@@ -323,6 +378,7 @@ export const AdminDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
   const [showForm, setShowForm] = useState(false);
+  const [uploadedFileIds, setUploadedFileIds] = useState<string[]>([]);
 
   // Order State
   const [orderSearch, setOrderSearch] = useState('');
@@ -403,21 +459,41 @@ export const AdminDashboard = () => {
   };
 
   const handleEditProduct = (product: Product) => {
-    setCurrentProduct(product);
+    setCurrentProduct({
+      ...product,
+      imgIds: product.imgIds || [],
+    });
     setIsEditing(true);
+    setUploadedFileIds([]);
     setShowForm(true);
   };
 
   const handleAddNew = () => {
     setCurrentProduct({
       images: [],
+      imgIds: [],
       pageType: 'shop',
       featured: false,
       sortOrder: 0,
       enabled: true
     });
     setIsEditing(false);
+    setUploadedFileIds([]);
     setShowForm(true);
+  };
+
+  const handleCloseModal = async () => {
+    // Delete all newly uploaded images from ImageKit when modal is closed
+    for (const fileId of uploadedFileIds) {
+      try {
+        await fetch(`/api/upload?fileId=${fileId}`, { method: 'DELETE' });
+      } catch (error) {
+        console.error('Error deleting image from ImageKit:', error);
+      }
+    }
+    setUploadedFileIds([]);
+    setCurrentProduct({});
+    setShowForm(false);
   };
 
   const handleProductSubmit = async (e: React.FormEvent) => {
@@ -432,6 +508,7 @@ export const AdminDashboard = () => {
         price: Math.max(0, Number(currentProduct.price) || 0),
         salePrice: currentProduct.salePrice ? Math.max(0, Number(currentProduct.salePrice)) : undefined,
         images: currentProduct.images || [],
+        imgIds: currentProduct.imgIds || [],
         page: 'both',
         pageType: currentProduct.pageType || 'shop',
         featured: currentProduct.featured || false,
@@ -462,6 +539,7 @@ export const AdminDashboard = () => {
       if (res.ok) {
         setShowForm(false);
         setCurrentProduct({});
+        setUploadedFileIds([]);
         refreshData();
       } else {
         alert('Failed to save product');
@@ -982,7 +1060,7 @@ export const AdminDashboard = () => {
             <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
               <div className="flex justify-between items-center p-6 border-b">
                 <h3 className="text-xl font-serif font-bold">{isEditing ? 'Edit Product' : 'Add New Product'}</h3>
-                <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-red-500">
+                <button onClick={handleCloseModal} className="text-gray-400 hover:text-red-500">
                   <X size={24} />
                 </button>
               </div>
@@ -992,8 +1070,10 @@ export const AdminDashboard = () => {
                   product={currentProduct}
                   onChange={setCurrentProduct}
                   onSubmit={handleProductSubmit}
-                  onCancel={() => setShowForm(false)}
+                  onCancel={handleCloseModal}
                   isEditing={isEditing}
+                  uploadedFileIds={uploadedFileIds}
+                  setUploadedFileIds={setUploadedFileIds}
                 />
               </div>
             </div>
@@ -1273,18 +1353,27 @@ export const AdminDashboard = () => {
 const HeroSlidesManager: React.FC<{ heroSlides: HeroSlide[]; onRefresh: () => void }> = ({ heroSlides, onRefresh }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
-  const [formData, setFormData] = useState({ image: '', title: '', subtitle: '', enabled: true });
+  const [formData, setFormData] = useState({ image: '', imgId: '', title: '', subtitle: '', enabled: true });
   const [uploading, setUploading] = useState(false);
+  const [uploadedImgId, setUploadedImgId] = useState<string>('');
 
   const handleAdd = () => {
     setEditingSlide(null);
-    setFormData({ image: '', title: '', subtitle: '', enabled: true });
+    setFormData({ image: '', imgId: '', title: '', subtitle: '', enabled: true });
+    setUploadedImgId('');
     setShowForm(true);
   };
 
   const handleEdit = (slide: HeroSlide) => {
     setEditingSlide(slide);
-    setFormData({ image: slide.image, title: slide.title, subtitle: slide.subtitle, enabled: slide.enabled });
+    setFormData({ 
+      image: slide.image, 
+      imgId: slide.imgId || '', 
+      title: slide.title, 
+      subtitle: slide.subtitle, 
+      enabled: slide.enabled 
+    });
+    setUploadedImgId('');
     setShowForm(true);
   };
 
@@ -1304,13 +1393,35 @@ const HeroSlidesManager: React.FC<{ heroSlides: HeroSlide[]; onRefresh: () => vo
 
         if (res.ok) {
           const data = await res.json();
-          setFormData({ ...formData, image: data.url });
+          // If there was a previously uploaded image in this session, delete it
+          if (uploadedImgId) {
+            try {
+              await fetch(`/api/upload?fileId=${uploadedImgId}`, { method: 'DELETE' });
+            } catch (err) {
+              console.error('Error deleting previous upload:', err);
+            }
+          }
+          setFormData({ ...formData, image: data.url, imgId: data.fileId });
+          setUploadedImgId(data.fileId);
         }
       } catch (error) {
         console.error('Error uploading image:', error);
       }
       setUploading(false);
     }
+  };
+
+  const handleCancel = async () => {
+    // Delete newly uploaded image if canceling
+    if (uploadedImgId) {
+      try {
+        await fetch(`/api/upload?fileId=${uploadedImgId}`, { method: 'DELETE' });
+      } catch (error) {
+        console.error('Error deleting uploaded image:', error);
+      }
+    }
+    setUploadedImgId('');
+    setShowForm(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1330,6 +1441,7 @@ const HeroSlidesManager: React.FC<{ heroSlides: HeroSlide[]; onRefresh: () => vo
           body: JSON.stringify({ ...formData, sortOrder: maxSortOrder + 1 }),
         });
       }
+      setUploadedImgId('');
       setShowForm(false);
       onRefresh();
     } catch (error) {
@@ -1463,7 +1575,7 @@ const HeroSlidesManager: React.FC<{ heroSlides: HeroSlide[]; onRefresh: () => vo
                 <button type="submit" className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
                   {editingSlide ? 'Update' : 'Add'}
                 </button>
-                <button type="button" onClick={() => setShowForm(false)} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
+                <button type="button" onClick={handleCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">
                   Cancel
                 </button>
               </div>

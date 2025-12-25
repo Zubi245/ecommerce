@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Product from '@/models/Product';
+import ImageKit from 'imagekit';
+
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || '',
+});
 
 export async function GET() {
   try {
@@ -16,7 +23,8 @@ export async function GET() {
       fabric: p.fabric,
       price: p.price,
       salePrice: p.salePrice,
-      images: p.images,
+      images: p.images || [],
+      imgIds: p.imgIds || [],
       page: p.page,
       pageType: p.pageType,
       featured: p.featured,
@@ -37,7 +45,16 @@ export async function POST(req: Request) {
     await connectDB();
     
     const body = await req.json();
-    const product = new Product(body);
+    
+    // Ensure imgIds array matches images array length
+    const images = body.images || [];
+    const imgIds = body.imgIds || [];
+    
+    const product = new Product({
+      ...body,
+      images,
+      imgIds,
+    });
     await product.save();
     
     return NextResponse.json({
@@ -61,6 +78,21 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
     }
     
+    // Get product to delete its images from ImageKit
+    const product = await Product.findById(id);
+    if (product && product.imgIds && product.imgIds.length > 0) {
+      // Delete all images from ImageKit
+      for (const fileId of product.imgIds) {
+        if (fileId) {
+          try {
+            await imagekit.deleteFile(fileId);
+          } catch (imgError) {
+            console.error('Error deleting image from ImageKit:', imgError);
+          }
+        }
+      }
+    }
+    
     await Product.findByIdAndDelete(id);
     
     return NextResponse.json({ success: true });
@@ -79,6 +111,11 @@ export async function PUT(req: Request) {
     
     if (!id) {
       return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
+    }
+    
+    // Ensure imgIds is included in updates
+    if (updates.images && !updates.imgIds) {
+      updates.imgIds = [];
     }
     
     const product = await Product.findByIdAndUpdate(id, updates, { new: true });

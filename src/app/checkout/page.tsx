@@ -143,6 +143,7 @@ export default function CheckoutPage() {
                   alt={item.name}
                   loading="lazy"
                   className="w-16 h-16 object-cover rounded-sm"
+                  onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                 />
                 <div className="flex-1">
                   <h4 className="font-serif text-sm font-bold">{item.name}</h4>

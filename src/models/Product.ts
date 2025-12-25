@@ -8,6 +8,7 @@ export interface IProduct extends Document {
   price: number;
   salePrice?: number;
   images: string[];
+  imgIds: string[];
   page: 'home' | 'shop' | 'both';
   pageType: 'hero' | 'home' | 'shop';
   featured: boolean;
@@ -25,6 +26,7 @@ const ProductSchema = new Schema<IProduct>({
   price: { type: Number, required: true },
   salePrice: { type: Number },
   images: { type: [String], default: [] },
+  imgIds: { type: [String], default: [] },
   page: { type: String, enum: ['home', 'shop', 'both'], default: 'shop' },
   pageType: { type: String, enum: ['hero', 'home', 'shop'], default: 'shop' },
   featured: { type: Boolean, default: false },

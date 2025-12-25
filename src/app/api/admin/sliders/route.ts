@@ -1,18 +1,24 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Slider from '@/models/Slider';
+import ImageKit from 'imagekit';
+
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || '',
+});
 
 export async function GET() {
   try {
-    console.log("DB is connecting")
     await connectDB();
-    console.log("DB is connected")
     
     const sliders = await Slider.find().sort({ sortOrder: 1, createdAt: -1 });
     
     const normalized = sliders.map(s => ({
       id: s._id.toString(),
       image: s.image,
+      imgId: s.imgId || '',
       title: s.title,
       subtitle: s.subtitle,
       enabled: s.enabled,
@@ -20,27 +26,25 @@ export async function GET() {
       createdAt: s.createdAt.toISOString(),
     }));
     
-    console.log(normalized)
     return NextResponse.json(normalized);
   } catch (error) {
     console.error('Error fetching sliders:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Error fetching sliders:', message);
     return NextResponse.json({ error: 'Failed to fetch sliders', details: message }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
-    console.log("DB is Connecting")
     await connectDB();
-    console.log("DB Connected")
     
     const body = await req.json();
-    const slider = new Slider(body);
+    const slider = new Slider({
+      ...body,
+      imgId: body.imgId || '',
+    });
     await slider.save();
     
-    console.log(slider)
     return NextResponse.json({
       id: slider._id.toString(),
       title: slider.title,
@@ -60,6 +64,18 @@ export async function PUT(req: Request) {
     
     if (!id) {
       return NextResponse.json({ error: 'Slider ID required' }, { status: 400 });
+    }
+    
+    // If image is being changed, delete old image from ImageKit
+    if (updates.image) {
+      const existingSlider = await Slider.findById(id);
+      if (existingSlider && existingSlider.imgId && existingSlider.imgId !== updates.imgId) {
+        try {
+          await imagekit.deleteFile(existingSlider.imgId);
+        } catch (imgError) {
+          console.error('Error deleting old image from ImageKit:', imgError);
+        }
+      }
     }
     
     const slider = await Slider.findByIdAndUpdate(id, updates, { new: true });
@@ -87,6 +103,16 @@ export async function DELETE(req: Request) {
     
     if (!id) {
       return NextResponse.json({ error: 'Slider ID required' }, { status: 400 });
+    }
+    
+    // Get slider to delete its image from ImageKit
+    const slider = await Slider.findById(id);
+    if (slider && slider.imgId) {
+      try {
+        await imagekit.deleteFile(slider.imgId);
+      } catch (imgError) {
+        console.error('Error deleting image from ImageKit:', imgError);
+      }
     }
     
     await Slider.findByIdAndDelete(id);

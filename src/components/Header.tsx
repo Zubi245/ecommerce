@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { ShoppingBag, Menu, X, User } from 'lucide-react';
+import { ShoppingBag, Menu, X } from 'lucide-react';
 
 export const Header = () => {
   const { itemCount } = useCart();
@@ -32,17 +32,17 @@ export const Header = () => {
       <nav className="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           {/* Mobile Menu Button */}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-brand-black p-1">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-brand-black p-1 hover:text-gold-500 transition-colors">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
           {/* Logo */}
           <Link href="/" className="text-xl md:text-2xl font-serif font-bold tracking-tighter text-brand-black hover:scale-105 transition-transform duration-300">
-            SAM <span className="text-gold-500 hover:text-gold-600 transition-colors duration-300">FABRICS</span>
+            SAIM <span className="text-gold-500 hover:text-gold-600 transition-colors duration-300">ETHNIC</span>
           </Link>
 
-          {/* Desktop Links */}
-          <div className="hidden sm:flex space-x-8 text-sm font-medium uppercase tracking-wide text-gray-800">
+          {/* Desktop Nav Links */}
+          <div className="hidden md:!flex space-x-8 text-sm font-medium uppercase tracking-wide text-gray-800">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -57,9 +57,6 @@ export const Header = () => {
 
           {/* Icons */}
           <div className="flex items-center space-x-4 md:space-x-6">
-            <Link href="/login" className="text-gray-600 hover:text-gold-500 transition-colors">
-              <User size={20} />
-            </Link>
             <Link href="/cart" className="text-gray-600 hover:text-gold-500 transition-colors relative">
               <ShoppingBag size={20} />
               {itemCount > 0 && (
@@ -82,7 +79,7 @@ export const Header = () => {
           >
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <span className="font-serif font-bold text-xl">Menu</span>
-              <button onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
+              <button onClick={() => setIsMenuOpen(false)} className="hover:text-gold-500 transition-colors"><X size={24} /></button>
             </div>
             <div className="flex flex-col p-6 space-y-6 text-sm font-bold uppercase tracking-wide">
               {navLinks.map((link) => (

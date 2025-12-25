@@ -3,6 +3,7 @@
 export interface HeroSlide {
   id: string;
   image: string;
+  imgId?: string;
   title: string;
   subtitle: string;
   enabled: boolean;
@@ -21,6 +22,7 @@ export interface Product {
   price: number;
   salePrice?: number;
   images: string[];
+  imgIds?: string[];
   page: 'home' | 'shop' | 'both';
   pageType: 'hero' | 'home' | 'shop';
   featured: boolean;

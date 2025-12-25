@@ -8,8 +8,26 @@ import { Footer } from '@/components/Footer';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Sam Fabrics - Luxury Unstitched Suits',
-  description: 'Discover the finest collection of unstitched ladies suits in Pakistan. Premium Lawn, Velvet, and Chiffon fabrics for every occasion.',
+  title: {
+    default: 'Saim Ethnic - Premium Pakistani Clothing & Ethnic Wear Online',
+    template: '%s | Saim Ethnic'
+  },
+  description: 'Shop premium Pakistani ethnic wear at Saim Ethnic. Discover luxury unstitched suits, lawn, velvet, chiffon, and party wear. Free shipping on orders above PKR 5000.',
+  keywords: ['Pakistani clothing', 'ethnic wear', 'unstitched suits', 'lawn suits', 'velvet suits', 'chiffon suits', 'Pakistani fashion', 'Saim Ethnic', 'online clothing Pakistan'],
+  authors: [{ name: 'Saim Ethnic' }],
+  openGraph: {
+    type: 'website',
+    locale: 'en_PK',
+    url: 'https://saimethnic.com',
+    siteName: 'Saim Ethnic',
+    title: 'Saim Ethnic - Premium Pakistani Clothing & Ethnic Wear',
+    description: 'Shop premium Pakistani ethnic wear at Saim Ethnic. Discover luxury unstitched suits, lawn, velvet, chiffon, and party wear.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Saim Ethnic - Premium Pakistani Clothing',
+    description: 'Shop premium Pakistani ethnic wear online',
+  },
 };
 
 export default function RootLayout({

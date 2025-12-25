@@ -45,6 +45,7 @@ export default function CartPage() {
                         alt={item.name}
                         loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        onError={(e) => { e.currentTarget.src = FALLBACK_IMAGE; }}
                       />
                     </div>
                     

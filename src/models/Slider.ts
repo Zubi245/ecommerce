@@ -2,6 +2,7 @@ import mongoose, { Schema, model, Document } from 'mongoose';
 
 export interface ISlider extends Document {
   image: string;
+  imgId?: string;
   title: string;
   subtitle: string;
   enabled: boolean;
@@ -12,6 +13,7 @@ export interface ISlider extends Document {
 
 const SliderSchema = new Schema<ISlider>({
   image: { type: String, required: true },
+  imgId: { type: String, default: '' },
   title: { type: String, required: true },
   subtitle: { type: String, default: '' },
   enabled: { type: Boolean, default: true },
