@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
 import { Product } from '@/types';
@@ -12,10 +12,36 @@ function ShopContent() {
   const [categories, setCategories] = useState<string[]>(['All']);
   const [filter, setFilter] = useState('All');
   const [loading, setLoading] = useState(true);
+  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
+  const observerRef = useRef<IntersectionObserver | null>(null);
   
   const [minInput, setMinInput] = useState<string>('');
   const [maxInput, setMaxInput] = useState<string>('');
   const [appliedRange, setAppliedRange] = useState({ min: 0, max: 1000000 });
+
+  useEffect(() => {
+    // Setup Intersection Observer for scroll animations
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.getAttribute('data-index') || '0');
+            setVisibleItems((prev) => new Set([...prev, index]));
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px',
+      }
+    );
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -151,7 +177,7 @@ function ShopContent() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="bg-gray-200 animate-pulse aspect-[4/5] rounded-sm" />
           ))}
@@ -170,9 +196,27 @@ function ShopContent() {
       ) : (
         <>
           <p className="text-sm text-gray-500 mb-6">Showing {filteredProducts.length} results</p>
-          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-8">
-            {filteredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 md:gap-8">
+            {filteredProducts.map((product, index) => (
+              <div
+                key={product.id}
+                data-index={index}
+                ref={(el) => {
+                  if (el && observerRef.current) {
+                    observerRef.current.observe(el);
+                  }
+                }}
+                className={`transition-all duration-600 ${
+                  visibleItems.has(index)
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 translate-x-12'
+                }`}
+                style={{
+                  transitionDelay: visibleItems.has(index) ? `${(index % 4) * 0.1}s` : '0s',
+                }}
+              >
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         </>
@@ -185,7 +229,7 @@ export default function ShopPage() {
   return (
     <Suspense fallback={
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="bg-gray-200 animate-pulse aspect-[4/5] rounded-sm" />
           ))}

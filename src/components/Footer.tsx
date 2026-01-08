@@ -38,11 +38,11 @@ export const Footer = () => {
                 </li>
                 <li className="flex items-center space-x-3">
                   <Mail size={16} />
-                  <span>support@saimethnic.com</span>
+                  <span>saimethnic@gmail.com</span>
                 </li>
-                <li>
+                {/* <li>
                   123 Fashion Avenue, Liberty Market,<br/>Lahore, Pakistan
-                </li>
+                </li> */}
               </ul>
             </div>
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { ProductCard } from '@/components/ProductCard';
 import { Product, HeroSlide } from '@/types';
@@ -11,6 +11,32 @@ export default function HomeClient() {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    // Setup Intersection Observer for scroll animations
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.getAttribute('data-index') || '0');
+            setVisibleItems((prev) => new Set([...prev, index]));
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '50px',
+      }
+    );
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -97,8 +123,26 @@ export default function HomeClient() {
           </div>
         ) : products.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {products.map(product => (
-              <ProductCard key={product.id} product={product} />
+            {products.map((product, index) => (
+              <div
+                key={product.id}
+                data-index={index}
+                ref={(el) => {
+                  if (el && observerRef.current) {
+                    observerRef.current.observe(el);
+                  }
+                }}
+                className={`transition-all duration-600 ${
+                  visibleItems.has(index)
+                    ? 'opacity-100 translate-x-0'
+                    : 'opacity-0 translate-x-12'
+                }`}
+                style={{
+                  transitionDelay: visibleItems.has(index) ? `${(index % 4) * 0.1}s` : '0s',
+                }}
+              >
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         ) : (

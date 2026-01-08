@@ -6,8 +6,8 @@ import { NextResponse } from 'next/server';
 // 3. Use JWT tokens or sessions
 // 4. Implement proper authentication middleware
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'password';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'adminsaim';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Afr3fasDF#@rSDFe';
 
 export async function POST(req: Request) {
   try {

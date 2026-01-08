@@ -96,27 +96,27 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Full Name</label>
-                <input required name="name" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="text" placeholder="John Doe" />
+                <input required name="name" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="text" />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Phone Number</label>
-                <input required name="phone" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="tel" placeholder="0300 1234567" />
+                <input required name="phone" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="tel" />
               </div>
             </div>
 
             <div>
               <label className="block text-sm text-gray-600 mb-1">Email Address</label>
-              <input required name="email" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="email" placeholder="john@example.com" />
+              <input required name="email" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="email" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
                 <label className="block text-sm text-gray-600 mb-1">Address</label>
-                <input required name="address" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="text" placeholder="House 123, Street 4, Block A" />
+                <input required name="address" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="text" />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">City</label>
-                <input required name="city" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="text" placeholder="Lahore" />
+                <input required name="city" onChange={handleChange} className="w-full border border-gray-300 p-3 focus:outline-none focus:border-brand-black" type="text" />
               </div>
             </div>
 
