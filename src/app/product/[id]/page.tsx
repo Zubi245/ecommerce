@@ -201,15 +201,15 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8 md:py-12">
       <button 
         onClick={() => router.back()} 
-        className="flex items-center text-gray-500 hover:text-brand-black mb-8 transition-colors"
+        className="flex items-center text-gray-500 hover:text-brand-black mb-6 md:mb-8 transition-colors"
       >
         <ChevronLeft size={20} /> Back
       </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
         <ImageSlider 
           images={product.images} 
           productName={product.name}
@@ -217,15 +217,15 @@ export default function ProductDetailPage() {
         />
 
         <div className="flex flex-col h-full">
-          <p className="text-gray-500 uppercase tracking-widest text-sm mb-2">{product.category}</p>
-          <h1 className="font-serif text-4xl text-brand-black mb-4">{product.name}</h1>
+          <p className="text-gray-500 uppercase tracking-widest text-xs md:text-sm mb-2">{product.category}</p>
+          <h1 className="font-serif text-2xl md:text-4xl text-brand-black mb-4">{product.name}</h1>
           
-          <div className="flex items-center space-x-4 mb-8 border-b border-gray-100 pb-8">
-            <div className="text-3xl font-light">
+          <div className="flex items-center space-x-3 md:space-x-4 mb-6 md:mb-8 border-b border-gray-100 pb-6 md:pb-8">
+            <div className="text-2xl md:text-3xl font-light">
               {product.salePrice ? (
                 <>
-                  <span className="text-brand-pink font-bold mr-3">PKR {product.salePrice.toLocaleString()}</span>
-                  <span className="text-gray-400 line-through text-xl">PKR {product.price.toLocaleString()}</span>
+                  <span className="text-brand-pink font-bold mr-2 md:mr-3">PKR {product.salePrice.toLocaleString()}</span>
+                  <span className="text-gray-400 line-through text-lg md:text-xl">PKR {product.price.toLocaleString()}</span>
                 </>
               ) : (
                 <span className="text-brand-black font-bold">PKR {product.price.toLocaleString()}</span>
@@ -233,21 +233,21 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <div className="prose prose-sm text-gray-600 mb-8">
-            <h3 className="text-brand-black font-serif text-lg mb-2">Description</h3>
-            <p className="mb-4">{product.description}</p>
+          <div className="prose prose-sm text-gray-600 mb-6 md:mb-8">
+            <h3 className="text-brand-black font-serif text-base md:text-lg mb-2">Description</h3>
+            <p className="mb-4 text-sm md:text-base">{product.description}</p>
             
-            <h3 className="text-brand-black font-serif text-lg mb-2">Fabric Details</h3>
-            <p><strong>Type:</strong> {product.fabric}</p>
-            <p><strong>Items Included:</strong> Shirt, Trouser, Dupatta</p>
+            <h3 className="text-brand-black font-serif text-base md:text-lg mb-2">Fabric Details</h3>
+            <p className="text-sm md:text-base"><strong>Type:</strong> {product.fabric}</p>
+            <p className="text-sm md:text-base"><strong>Items Included:</strong> Shirt, Trouser, Dupatta</p>
           </div>
 
           <div className="mt-auto">
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <button 
                 onClick={handleAddToCart}
                 disabled={isAdded}
-                className={`flex-1 py-4 text-sm uppercase tracking-widest font-bold transition-all duration-300 flex items-center justify-center space-x-2 ${
+                className={`flex-1 py-3 md:py-4 text-xs md:text-sm uppercase tracking-widest font-bold transition-all duration-300 flex items-center justify-center space-x-2 ${
                   isAdded 
                   ? 'bg-green-600 text-white' 
                   : 'bg-brand-black text-white hover:bg-gold-500'
@@ -255,12 +255,12 @@ export default function ProductDetailPage() {
               >
                 {isAdded ? (
                   <>
-                    <Check size={20} />
+                    <Check size={18} />
                     <span>Added to Cart</span>
                   </>
                 ) : (
                   <>
-                    <ShoppingBag size={20} />
+                    <ShoppingBag size={18} />
                     <span>Add to Cart</span>
                   </>
                 )}
@@ -272,7 +272,7 @@ export default function ProductDetailPage() {
                   }
                   router.push('/checkout');
                 }}
-                className="flex-1 py-4 text-sm uppercase tracking-widest font-bold bg-gold-500 text-white hover:bg-gold-600 transition-all duration-300"
+                className="flex-1 py-3 md:py-4 text-xs md:text-sm uppercase tracking-widest font-bold bg-gold-500 text-white hover:bg-gold-600 transition-all duration-300"
               >
                 Buy It Now
               </button>
